@@ -78,7 +78,6 @@ public class BossSpaceship : Spaceship
         {
             StartSpawningProjectiles();
         }
-
         InheritedUpdateFunctionality();
     }    
 }
