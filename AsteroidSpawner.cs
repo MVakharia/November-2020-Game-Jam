@@ -59,13 +59,13 @@ public class AsteroidSpawner : MonoBehaviour
 
     public IEnumerator SpawnAsteroids ()
     {
-        while(AsteroidSetup.Singleton.AsteroidsLeftToSpawn > 0)
+        while(AsteroidManager.Singleton.AsteroidsLeftToSpawn > 0)
         {
             int spawnerToUse = SpawnerToUse();
 
             Instantiate(Asteroids[AsteroidToSpawn()], spawners[spawnerToUse].transform.position, spawners[spawnerToUse].transform.rotation);
 
-            AsteroidSetup.Singleton.DecrementAsteroidsLeftToSpawn();
+            AsteroidManager.Singleton.DecrementAsteroidsLeftToSpawn();
 
             MarkSpawner(spawnerToUse);
 

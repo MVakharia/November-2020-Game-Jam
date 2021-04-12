@@ -50,7 +50,7 @@ public class Asteroid : MonoBehaviour
     private void Move() => transform.Translate(0, 0, -MovementSpeed * Time.deltaTime);
     public void DestroyAsteroid()
     {
-        AsteroidSetup.Singleton.IncrementAsteroidsDestroyed();
+        AsteroidManager.Singleton.IncrementAsteroidsDestroyed();
         Destroy(gameObject);
     }
     public void SpawnMetal() => Instantiate(metalCube, transform.position, transform.rotation);
