@@ -5,38 +5,11 @@ using System.Linq;
 public class AsteroidSpawner : MonoBehaviour
 {
     private static AsteroidSpawner singleton;
-
-    [SerializeField]
-    private GameObject[] spawners;
-
-    [SerializeField]
-    private GameObject[] asteroids;
-
-    [SerializeField]
-    private float[] asteroidSpawnDelayMinimum = new float[] { 0, 0.45F, 0.45F, 0.45F, 0.42F, 0.39F, 0.36F, .3F, .27F, .24F, .21F };
-
-    [SerializeField]
-    private float[] asteroidSpawnDelayMaximum = new float[] { 0, 0.5F, 0.47F, 0.44F, 0.41F, 0.38F, 0.35F, 0.32F, .29F, .26F, .23F };
-
-    [SerializeField]
-    private bool[] markedSpawners;
-
-    /// <summary> Empty gameobjects that serve as positions for asteroids to spawn in. </summary>
-    public GameObject[] Spawners { get => spawners; private set => spawners = value; }
-
-    /// <summary> The asteroid prefabs. </summary>
-    public GameObject[] Asteroids { get => asteroids; private set => asteroids = value; }
-    
-    /// <summary> The delay between spawning waves of asteroids. </summary>
-    public float[] AsteroidSpawnDelayMinimum { get => asteroidSpawnDelayMinimum; private set => asteroidSpawnDelayMinimum = value; }
-
-    public float[] AsteroidSpawnDelayMaximum { get => asteroidSpawnDelayMaximum; private set => asteroidSpawnDelayMaximum = value; }
-
     public static AsteroidSpawner Singleton
     {
         get
         {
-            if(singleton == null)
+            if (singleton == null)
             {
                 singleton = GameObject.FindGameObjectWithTag("Asteroid Spawner").GetComponent<AsteroidSpawner>();
             }
@@ -44,32 +17,55 @@ public class AsteroidSpawner : MonoBehaviour
         }
     }
 
-    public bool[] MarkedSpawners { get { if (markedSpawners.Length < spawners.Length) { markedSpawners = new bool[spawners.Length]; } return markedSpawners; } }
+    #region Fields
+    private readonly float[] asteroidSpawnDelayMinimum = new float[] { 0, 0.45F, 0.45F, 0.45F, 0.42F, 0.39F, 0.36F, .3F, .27F, .24F, .21F };
+    private readonly float[] asteroidSpawnDelayMaximum = new float[] { 0, 0.5F, 0.47F, 0.44F, 0.41F, 0.38F, 0.35F, 0.32F, .29F, .26F, .23F };
+    private bool[] _marked_Spawners;
+    [SerializeField]
+    private GameObject[] spawners;
+    [SerializeField]
+    private GameObject[] asteroids;
+    #endregion
 
-    private void Awake()
+    #region Properties
+    private bool[] MarkedSpawners { get { if (_marked_Spawners.Length < spawners.Length) { _marked_Spawners = new bool[spawners.Length]; } return _marked_Spawners; } }
+    private int CurrentLevel => GameManager.Singleton.CurrentLevel;
+    private float SpawnDelay() => Random.Range(asteroidSpawnDelayMinimum[CurrentLevel], asteroidSpawnDelayMaximum[CurrentLevel]);
+    private int AsteroidToSpawn() => Random.Range(0, asteroids.Length);
+    private int SpawnerToUse
     {
-        for (int i = 0; i < Spawners.Length; i++)
+        get
         {
-            if (Spawners[i] == null)
+            int spawner = Random.Range(0, spawners.Length);
+
+            if (!MarkedSpawners[spawner])
             {
-                Spawners[i] = transform.GetChild(i).gameObject;
+                return spawner;
+            }
+            else
+            {
+                return SpawnerToUse;
             }
         }
     }
+    #endregion
 
-    public IEnumerator SpawnAsteroids ()
+    #region Methods
+    private void MarkSpawner(int spawner) => MarkedSpawners[spawner] = true;
+    private void UnmarkAllSpawners() { for (int i = 0; i < MarkedSpawners.Length; i++) { MarkedSpawners[i] = false; } }
+    public IEnumerator SpawnAsteroids()
     {
-        while(AsteroidManager.Singleton.AsteroidsLeftToSpawn > 0)
+        while (AsteroidManager.Singleton.AsteroidsLeftToSpawn > 0)
         {
-            int spawnerToUse = SpawnerToUse();
+            int spawnerToUse = SpawnerToUse;
 
-            Instantiate(Asteroids[AsteroidToSpawn()], spawners[spawnerToUse].transform.position, spawners[spawnerToUse].transform.rotation);
+            Instantiate(asteroids[AsteroidToSpawn()], spawners[spawnerToUse].transform.position, spawners[spawnerToUse].transform.rotation);
 
             AsteroidManager.Singleton.DecrementAsteroidsLeftToSpawn();
 
             MarkSpawner(spawnerToUse);
 
-            if(MarkedSpawners.All(x => x))
+            if (MarkedSpawners.All(x => x))
             {
                 UnmarkAllSpawners();
             }
@@ -77,41 +73,16 @@ public class AsteroidSpawner : MonoBehaviour
             yield return new WaitForSeconds(SpawnDelay());
         }
     }
+    #endregion
 
-    private void UnmarkAllSpawners ()
+    private void Awake()
     {
-        for (int i = 0; i < MarkedSpawners.Length; i++)
+        for (int i = 0; i < spawners.Length; i++)
         {
-            MarkedSpawners[i] = false;
-        }
-    }
-
-    private void MarkSpawner (int spawner)
-    {
-        MarkedSpawners[spawner] = true;
-    }
-
-    private float SpawnDelay ()
-    {
-        return Random.Range(AsteroidSpawnDelayMinimum[GameManager.Singleton.CurrentLevel], AsteroidSpawnDelayMaximum[GameManager.Singleton.CurrentLevel]);
-    }
-
-    private int AsteroidToSpawn ()
-    {
-        return Random.Range(0, Asteroids.Length);
-    }
-
-    private int SpawnerToUse ()
-    {
-        int spawner = Random.Range(0, Spawners.Length);
-
-        if(!MarkedSpawners[spawner])
-        {
-            return spawner;
-        }
-        else
-        {
-            return SpawnerToUse();
+            if (spawners[i] == null)
+            {
+                spawners[i] = transform.GetChild(i).gameObject;
+            }
         }
     }
 }
