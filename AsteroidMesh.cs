@@ -2,56 +2,67 @@
 
 public class AsteroidMesh : MonoBehaviour
 {
-    private Asteroid thisAsteroid;
+    #region Fields
+    private Asteroid _this_Asteroid;
+    #endregion
 
-    private Element thisAsteroidElement;
+    #region Properties
+    public Element ThisAsteroidElement => ThisAsteroid.AsteroidElement;
 
-    private void Start()
+    public Asteroid ThisAsteroid
     {
-        thisAsteroid = transform.GetComponentInParent<Asteroid>();
-
-        thisAsteroidElement = thisAsteroid.AsteroidElement;
+        get
+        {
+            if (_this_Asteroid == null)
+            {
+                _this_Asteroid = transform.GetComponentInParent<Asteroid>();
+            }
+            return _this_Asteroid;
+        }
     }
+    #endregion
+
+    #region Methods
+    public void DestroyAsteroid()
+    {
+        ThisAsteroid.DestroyAsteroid();
+    }
+    #endregion
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.tag == "ObjectEraser")
+        if (other.gameObject.CompareTag("ObjectEraser"))
         {
             DestroyAsteroid();
         }
 
-        if (other.gameObject.tag == "Player Shield")
+        if (other.gameObject.CompareTag("Player Shield"))
         {
             PlayerSpaceship.Singleton.ShieldHit();
 
-            if (thisAsteroidElement == Element.Cryo)
+            if (ThisAsteroidElement == Element.Cryo)
             {
-                PlayerSpaceship.Singleton.StartFreezingShield(thisAsteroid.FreezeLength);
+                PlayerSpaceship.Singleton.StartFreezingShield(ThisAsteroid.FreezeLength);
             }
-            else if(thisAsteroidElement == Element.Shock)
+            else if(ThisAsteroidElement == Element.Shock)
             {                
-                PlayerSpaceship.Singleton.ShockShield(thisAsteroid.ShockLength);                
+                PlayerSpaceship.Singleton.ShockShield(ThisAsteroid.ShockLength);                
             }
             
             DestroyAsteroid();
         }
 
-        if(other.gameObject.tag == "Player Spaceship")
+        if(other.gameObject.CompareTag("Player Spaceship"))
         {
             PlayerSpaceship.Singleton.HullHit();
             DestroyAsteroid();
         }
 
-        if(other.gameObject.tag == "Laser Projectile")
+        if(other.gameObject.CompareTag("Laser Projectile"))
         {
             Destroy(other.gameObject);
-            thisAsteroid.SpawnMetal();
+            ThisAsteroid.SpawnMetal();
             DestroyAsteroid();
         }
-    }
-
-    public void DestroyAsteroid ()
-    {
-        thisAsteroid.DestroyAsteroid();
     }
 }
