@@ -2,39 +2,37 @@
 
 public class BossProjectile : MonoBehaviour
 {
-    private Renderer thisRenderer;
-
+    #region Fields
+    private Renderer _this_Renderer;
+    private const float moveSpeed = 200;
+    private const float projectileChargeSpeed = 1F;
+    [SerializeField]
     private float redAmount = 0;
-
+    [SerializeField]
     private float greenAmount = 1;
+    #endregion
 
-    private GameObject playerShip;
-
-    private float moveSpeed = 200;
-
-    private float projectileChargeSpeed = 1F;
-
-    private void Start()
+    #region Properties
+    private GameObject PlayerShip => PlayerSpaceship.Singleton.gameObject;
+    private bool ProjectileIsFullyCharged => redAmount == 1 && greenAmount == 0;
+    private Renderer ThisRenderer
     {
-        thisRenderer = GetComponent<Renderer>();
-        playerShip = PlayerSpaceship.Singleton.gameObject;
-    }
-
-    private void Update()
-    {
-        if(!ProjectileIsFullyCharged())
+        get
         {
-            ChargeProjectile();
-        }
-        else
-        {
-            Move();
+            if (_this_Renderer == null)
+            {
+                _this_Renderer = GetComponent<Renderer>();
+            }
+            return _this_Renderer;
         }
     }
+    #endregion
 
-    private void ChargeProjectile ()
+    #region Methods
+    private void Move() => transform.position = Vector3.MoveTowards(transform.position, PlayerShip.transform.position, moveSpeed * Time.deltaTime);
+    private void ChargeProjectile()
     {
-        thisRenderer.material.color = new Color(redAmount, greenAmount, 0, 0);
+        ThisRenderer.material.color = new Color(redAmount, greenAmount, 0, 0);
 
         if (redAmount != 1)
         {
@@ -57,38 +55,39 @@ public class BossProjectile : MonoBehaviour
         }
     }
 
-    private bool ProjectileIsFullyCharged ()
-    {
-        return redAmount == 1 && greenAmount == 0;
-    }
+    private void DestroyProjectile() => Destroy(gameObject);
+    #endregion
 
-    private void Move ()
+
+    private void Update()
     {
-        transform.position = Vector3.MoveTowards(transform.position, playerShip.transform.position, moveSpeed * Time.deltaTime);
+        if (ProjectileIsFullyCharged)
+        {
+            Move();
+        }
+        else
+        {
+            ChargeProjectile();
+        }
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.tag == "Player Shield")
+        if (other.gameObject.CompareTag("Player Shield"))
         {
             PlayerSpaceship.Singleton.ShieldHit();
             DestroyProjectile();
         }
 
-        if(other.gameObject.tag == "Player Spaceship")
+        if(other.gameObject.CompareTag("Player Spaceship"))
         {
             PlayerSpaceship.Singleton.HullHit();
             DestroyProjectile();
         }
-        if (other.gameObject.tag == "Laser Projectile")
+        if (other.gameObject.CompareTag("Laser Projectile"))
         {
             Destroy(other.gameObject);
             DestroyProjectile();
         }
-    }
-
-    private void DestroyProjectile ()
-    {
-        Destroy(gameObject);
-    }
+    }    
 }
