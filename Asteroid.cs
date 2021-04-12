@@ -16,8 +16,8 @@ public class Asteroid : MonoBehaviour
     #region Properties
     public Element AsteroidElement => asteroidElement;
     public float MovementSpeed => 100;
-    public Color ShockColor => new(0, .25F, 1);
-    public Color CryoColor => new(0, 1, 1);
+    public Color ShockColor => new Color(0, .25F, 1);
+    public Color CryoColor => new Color(0, 1, 1);
     public int ShockLength => 6;
     public int FreezeLength => 6;
 
@@ -54,7 +54,7 @@ public class Asteroid : MonoBehaviour
         Destroy(gameObject);
     }
     public void SpawnMetal() => Instantiate(metalCube, transform.position, transform.rotation);
-    private Element AssignedElement()
+    private Element AssignedElement ()
     {
         switch (Random.Range(0, 7))
         {
@@ -62,7 +62,9 @@ public class Asteroid : MonoBehaviour
             case 6: return Element.Cryo;
             default: return Element.Normal;
         }
+        
     }
+
     private Color NewAsteroidColor()
     {
         if (asteroidElement == Element.Cryo)
@@ -85,4 +87,5 @@ public class Asteroid : MonoBehaviour
     }
 
     private void Update() => Move();
+
 }
