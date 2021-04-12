@@ -2,16 +2,28 @@
 
 public class LaserProjectile : MonoBehaviour
 {
+    #region Fields
+    private float expiry = 2F, count = 0;
     [SerializeField]
     private Vector3 reticlePosition;
-
     [SerializeField]
     private float movementSpeed;
+    #endregion
 
-    private float expiry = 2F, count = 0;
+    #region Methods
+    private void LookAtReticle() => transform.LookAt(GameObject.FindGameObjectWithTag("Reticle").transform);
+    private void GetMovementSpeed() => movementSpeed = PlayerSpaceship.Singleton.LaserProjectileSpeed;
+    private void MoveProjectile() => transform.Translate(Vector3.forward * movementSpeed * Time.deltaTime);
+    private void DestroyProjectileAfterDelay()
+    {
+        count += Time.deltaTime;
 
-    public Vector3 ReticlePosition { get => reticlePosition; private set => reticlePosition = value; }
-    public float MovementSpeed { get => movementSpeed; private set => movementSpeed = value; }
+        if (count > expiry)
+        {
+            Destroy(gameObject);
+        }
+    }
+    #endregion
 
     private void Start()
     {
@@ -26,33 +38,6 @@ public class LaserProjectile : MonoBehaviour
 
         DestroyProjectileAfterDelay();
     }
-
-    private void LookAtReticle ()
-    {
-        transform.LookAt(GameObject.FindGameObjectWithTag("Reticle").transform);
-    }
-
-    private void GetMovementSpeed ()
-    {
-        MovementSpeed = PlayerSpaceship.Singleton.LaserProjectileSpeed;
-    }
-
-    private void MoveProjectile ()
-    {
-        transform.Translate(Vector3.forward * MovementSpeed * Time.deltaTime);
-    }
-
-    private void DestroyProjectileAfterDelay()
-    {
-        count += Time.deltaTime;
-
-        if (count > expiry)
-        {
-            Destroy(gameObject);
-        }
-    }
-
-    
 
     private void OnTriggerEnter(Collider other)
     {
