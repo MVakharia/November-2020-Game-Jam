@@ -3,7 +3,8 @@ using System.Collections;
 
 public class BossSpaceship : Spaceship
 {
-    private static BossSpaceship singleton;
+    #region Fields
+    private GameManager gameMgr => GameManager.Singleton;
     [SerializeField]
     private Transform targetPosition;
     [SerializeField]
@@ -16,53 +17,55 @@ public class BossSpaceship : Spaceship
     private bool hasStartedSpawningProjectiles;
     [SerializeField]
     private float projectileSpawnDelay = 1F;
-    [SerializeField]
-    private GameManager gameMgr;
-    public static BossSpaceship Singleton { get => singleton; private set => singleton = value; }
-    public Transform TargetPosition { get => targetPosition; private set => targetPosition = value; }
-    public float MoveSpeed { get => moveSpeed; private set => moveSpeed = value; }
-    public GameObject Projectile { get => projectile; private set => projectile = value; }
-    public Transform[] ProjectileSpawnPositions { get => projectileSpawnPositions; private set => projectileSpawnPositions = value; }
-    public bool HasStartedSpawningProjectiles { get => hasStartedSpawningProjectiles; private set => hasStartedSpawningProjectiles = value; }
-    public float ProjectileSpawnDelay { get => projectileSpawnDelay; private set => projectileSpawnDelay = value; }
-    public GameManager GameMgr { get => gameMgr; private set => gameMgr = value; }
+    #endregion
 
-    public void SetHealthAndShieldValues()
+    #region Properties
+    private bool IsAtTargetPosition() => transform.position == targetPosition.position;
+    #endregion
+
+    #region Methods
+    private void SetHullHealthValue() => HullHealth = HullMaximumHealth;
+    private void SetHullShieldValue() => ShieldHealth = ShieldMaximumHealth;
+    private void SetHullMaxHPPerLevel() => HullMaximumHealth = 10 + (gameMgr.CurrentLevel);
+    private void SetShieldMaxHPToHullMaxHP() => ShieldMaximumHealth = HullMaximumHealth;
+    private void GetTargetPosition() => targetPosition = GameObject.FindGameObjectWithTag("Boss Position").transform;
+    private void ToggleProjectileSpawningStatus() => hasStartedSpawningProjectiles = !hasStartedSpawningProjectiles;
+    private void MoveToTargetPosition() => transform.position = Vector3.MoveTowards(transform.position, targetPosition.position, moveSpeed * Time.deltaTime);
+    private void SpawnProjectile(Vector3 position) => Instantiate(projectile, position, Quaternion.identity);
+    private void CallGameManager() => GameManager.Singleton.LocateBossShip();
+    private void StartSpawningProjectiles()
     {
-        HullHealth = HullMaximumHealth;
-        ShieldHealth = ShieldMaximumHealth;
+        if (!hasStartedSpawningProjectiles)
+        {
+            ToggleProjectileSpawningStatus();
+            StartCoroutine(SpawnProjectiles());
+        }
     }
 
-    public void SetHealthAndShieldValuesPerLevel()
+    private IEnumerator SpawnProjectiles()
     {
-        HullMaximumHealth = 10 + (GameMgr.CurrentLevel);
-        ShieldMaximumHealth = HullMaximumHealth;
-    }
+        while (true)
+        {
+            foreach (Transform p in projectileSpawnPositions)
+            {
+                SpawnProjectile(p.position);
 
-    public void GetGameManager()
-    {
-        GameMgr = GameManager.Singleton.gameObject.GetComponent<GameManager>();
+                yield return new WaitForSeconds(projectileSpawnDelay);
+            }
+        }
     }
-
-    public void GetTargetPosition()
-    {
-        targetPosition = GameObject.FindGameObjectWithTag("Boss Position").transform;
-    }
-
-    public void ToggleProjectileSpawningStatus()
-    {
-        HasStartedSpawningProjectiles = !HasStartedSpawningProjectiles;
-    }
+    #endregion
 
     private void Start()
     {
-        GetGameManager();
-
         CallGameManager();
         GetTargetPosition();
 
-        SetHealthAndShieldValuesPerLevel();
-        SetHealthAndShieldValues();
+        SetHullMaxHPPerLevel();
+        SetShieldMaxHPToHullMaxHP();
+
+        SetHullHealthValue();
+        SetHullShieldValue();
     }
 
     private void Update()
@@ -77,47 +80,5 @@ public class BossSpaceship : Spaceship
         }
 
         InheritedUpdateFunctionality();
-    }
-
-    public void MoveToTargetPosition()
-    {
-        transform.position = Vector3.MoveTowards(transform.position, TargetPosition.position, MoveSpeed * Time.deltaTime);
-    }
-
-    private bool IsAtTargetPosition ()
-    {
-        return transform.position == TargetPosition.position;
-    }
-
-    public void StartSpawningProjectiles ()
-    {
-        if(!HasStartedSpawningProjectiles)
-        {
-            ToggleProjectileSpawningStatus();
-            StartCoroutine(SpawnProjectiles());
-        }
-    }
-
-    private IEnumerator SpawnProjectiles ()
-    {
-        while(true)
-        {
-            foreach (Transform p in ProjectileSpawnPositions)
-            {
-                SpawnProjectile(p.position);
-
-                yield return new WaitForSeconds(ProjectileSpawnDelay);
-            }
-        }
-    }
-
-    private void SpawnProjectile (Vector3 position)
-    {
-        Instantiate(Projectile, position, Quaternion.identity);
-    }
-
-    private void CallGameManager ()
-    {
-        GameManager.Singleton.LocateBossShip();
-    }
+    }    
 }
