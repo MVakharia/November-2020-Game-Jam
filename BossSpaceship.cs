@@ -24,10 +24,10 @@ public class BossSpaceship : Spaceship
     #endregion
 
     #region Methods
-    private void SetHullHealthValue() => HullHealth = HullMaximumHealth;
-    private void SetHullShieldValue() => ShieldHealth = ShieldMaximumHealth;
-    private void SetHullMaxHPPerLevel() => HullMaximumHealth = 10 + (gameMgr.CurrentLevel);
-    private void SetShieldMaxHPToHullMaxHP() => ShieldMaximumHealth = HullMaximumHealth;
+    private void SetHullHealthValue() => hullHealth = HullMaximumHealth;
+    private void SetHullShieldValue() => shieldHealth = ShieldMaximumHealth;
+    private void SetHullMaxHPPerLevel() => hullMaximumHealth = 10 + (gameMgr.CurrentLevel);
+    private void SetShieldMaxHPToHullMaxHP() => shieldMaximumHealth = HullMaximumHealth;
     private void GetTargetPosition() => targetPosition = GameObject.FindGameObjectWithTag("Boss Position").transform;
     private void ToggleProjectileSpawningStatus() => hasStartedSpawningProjectiles = !hasStartedSpawningProjectiles;
     private void MoveToTargetPosition() => transform.position = Vector3.MoveTowards(transform.position, targetPosition.position, moveSpeed * Time.deltaTime);

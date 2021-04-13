@@ -66,18 +66,18 @@ public class PlayerSpaceship : Spaceship
     {
         get
         {
-            if (ShieldIsFrozen)
+            if (shieldIsFrozen)
             {
                 return "Danger. Further damage will destroy shield.";
             }
-            else if (ShieldIsRebooting)
+            else if (shieldIsRebooting)
             {
                 if (ShieldHealth > 1)
                 {
                     return "Danger. Shield rebooting in transit. Please stand by.";
                 }
             }
-            return "Shield health:\n\n" + ShieldHealth;
+            return "Shield health:\n\n" + shieldHealth;
         }
     }
     private float NewLaserFireRate()
@@ -91,16 +91,16 @@ public class PlayerSpaceship : Spaceship
     #endregion
 
     #region Methods
-    private void SetNewMaximumHullHealth() => HullMaximumHealth = NewMaximumHullHealth;
+    private void SetNewMaximumHullHealth() => hullMaximumHealth = NewMaximumHullHealth;
     public void UpgradeHull() { hullLevel++; SetNewMaximumHullHealth(); FullyRepairHull(); }
     public void DowngradeHull() { hullLevel--; SetNewMaximumHullHealth(); FullyRepairHull(); }
-    public void RepairHull() => HullHealth++;
-    public void FullyRepairHull() => HullHealth = HullMaximumHealth;
+    public void RepairHull() => hullHealth++;
+    public void FullyRepairHull() => hullHealth = hullMaximumHealth;
     public void UpgradeShield() { shieldLevel++; SetNewMaximumShieldHealth(); FullyRepairShield(); }
     public void DowngradeShield() { shieldLevel--; SetNewMaximumShieldHealth(); FullyRepairShield(); }
-    private void SetNewMaximumShieldHealth() => ShieldMaximumHealth = NewMaximumShieldHealth();
-    public void RepairShield() => ShieldHealth++;
-    private void FullyRepairShield() => ShieldHealth = ShieldMaximumHealth;
+    private void SetNewMaximumShieldHealth() => shieldMaximumHealth = NewMaximumShieldHealth();
+    public void RepairShield() => shieldHealth++;
+    private void FullyRepairShield() => shieldHealth = shieldMaximumHealth;
     private void CountDownLaserCooldown() => laserCooldownCount -= Time.deltaTime;
     private void ResetLaserCooldown() => laserCooldownCount = laserCooldown;
     private void SetNewLaserFireRate() => laserCooldown = NewLaserFireRate();
