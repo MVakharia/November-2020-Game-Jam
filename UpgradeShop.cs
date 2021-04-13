@@ -71,6 +71,7 @@ public class UpgradeShop : MonoBehaviour
             if (PlayerShip.ShieldLevel < 10)
             {
                 GameMgr.RemoveFromCurrency(ShieldCost()); PlayerShip.UpgradeShield();
+                PlayMessage("");
             }
             else
             {
@@ -88,6 +89,7 @@ public class UpgradeShop : MonoBehaviour
         {
             GameMgr.AddToCurrency(ShieldRefundAmount());
             PlayerShip.DowngradeShield();
+            PlayMessage("");
         }
         else
         {
@@ -102,6 +104,7 @@ public class UpgradeShop : MonoBehaviour
             {
                 GameMgr.RemoveFromCurrency(ShieldRepairCost);
                 PlayerShip.RepairShield();
+                PlayMessage("");
             }
             else
             {
@@ -121,6 +124,7 @@ public class UpgradeShop : MonoBehaviour
             if (PlayerShip.HullLevel < 10)
             {
                 GameMgr.RemoveFromCurrency(HullCost); PlayerShip.UpgradeHull();
+                PlayMessage("");
             }
             else
             {
@@ -139,6 +143,7 @@ public class UpgradeShop : MonoBehaviour
         {
             GameMgr.AddToCurrency(HullRefund);
             PlayerShip.DowngradeHull();
+            PlayMessage("");
         }
         else
         {
@@ -154,6 +159,7 @@ public class UpgradeShop : MonoBehaviour
             {
                 GameMgr.RemoveFromCurrency(HullRepairCost);
                 PlayerShip.RepairHull();
+                PlayMessage("");
             }
             else
             {
@@ -173,6 +179,7 @@ public class UpgradeShop : MonoBehaviour
             if (PlayerShip.LaserLevel < 10)
             {
                 GameMgr.RemoveFromCurrency(LaserCost); PlayerShip.UpgradeLaser();
+                PlayMessage("");
             }
             else
             {
@@ -190,6 +197,7 @@ public class UpgradeShop : MonoBehaviour
         {
             GameMgr.AddToCurrency(LaserRefund);
             PlayerShip.DowngradeLaser();
+            PlayMessage("");
         }
         else
         {

@@ -20,6 +20,7 @@ public class AsteroidSpawner : MonoBehaviour
     #region Fields
     private readonly float[] asteroidSpawnDelayMinimum = new float[] { 0, 0.45F, 0.45F, 0.45F, 0.42F, 0.39F, 0.36F, .3F, .27F, .24F, .21F };
     private readonly float[] asteroidSpawnDelayMaximum = new float[] { 0, 0.5F, 0.47F, 0.44F, 0.41F, 0.38F, 0.35F, 0.32F, .29F, .26F, .23F };
+    [SerializeField]
     private bool[] _marked_Spawners;
     [SerializeField]
     private GameObject[] spawners;
@@ -28,7 +29,18 @@ public class AsteroidSpawner : MonoBehaviour
     #endregion
 
     #region Properties
-    private bool[] MarkedSpawners { get { if (_marked_Spawners.Length < spawners.Length) { _marked_Spawners = new bool[spawners.Length]; } return _marked_Spawners; } }
+    private bool[] MarkedSpawners
+    { 
+        get 
+        { 
+            if (_marked_Spawners.Length < spawners.Length) 
+            { 
+                _marked_Spawners = new bool[spawners.Length]; 
+            } 
+            return _marked_Spawners; 
+        } 
+    }
+
     private int CurrentLevel => GameManager.Singleton.CurrentLevel;
     private float SpawnDelay() => Random.Range(asteroidSpawnDelayMinimum[CurrentLevel], asteroidSpawnDelayMaximum[CurrentLevel]);
     private int AsteroidToSpawn() => Random.Range(0, asteroids.Length);
