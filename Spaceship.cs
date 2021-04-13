@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class Spaceship : MonoBehaviour
 {
+    #region Fields
     [SerializeField]
     protected int hullHealth;
     [SerializeField]
@@ -21,25 +22,31 @@ public class Spaceship : MonoBehaviour
     protected bool shieldIsFrozen;
     [SerializeField]
     protected bool shieldIsRebooting;
+    #endregion
 
-    public int HullHealth { get { return hullHealth; } protected set { hullHealth = value; } }
-    public int HullMaximumHealth { get => hullMaximumHealth; protected set => hullMaximumHealth = value; }
-    public int ShieldHealth { get { return shieldHealth; } protected set { shieldHealth = value; } }
-    public int ShieldMaximumHealth { get => shieldMaximumHealth; protected set => shieldMaximumHealth = value; }
-    public GameObject Shield { get => shield; protected set => shield = value; }
-    public MeshCollider HullCollider { get => hullCollider; protected set => hullCollider = value; }
-    public bool ShieldIsFrozen { get => shieldIsFrozen; protected set => shieldIsFrozen = value; }
-    public bool ShieldIsRebooting { get => shieldIsRebooting; protected set => shieldIsRebooting = value; }
-    private void DeactivateShield() { Shield.SetActive(false); ThawShield(); }
-    public void ActivateShield() { Shield.SetActive(true); }
-    public void ShieldHit() { if (ShieldIsFrozen) { DepleteShield(); return; } DamageShield(); }
-    public void DamageShield() { ShieldHealth--; }
-    public void DepleteShield() { ShieldHealth -= ShieldHealth; }
-    public void DamageHull() { HullHealth--; }
-    public void FreezeShield() { ShieldIsFrozen = true; }
-    public void ThawShield() { ShieldIsFrozen = false; }
-    public void HullHit() { if (!Shield.activeSelf && HullHealth > 0) { DamageHull(); } }
-    private void SetHullCollision() { hullCollider.enabled = !Shield.activeSelf; }
+    #region Properties
+    public int HullHealth => hullHealth;
+    public int HullMaximumHealth => hullMaximumHealth; 
+    public int ShieldHealth => shieldHealth;
+    public int ShieldMaximumHealth => shieldMaximumHealth;
+    #endregion
+
+    #region Methods
+    private void DeactivateShield() { shield.SetActive(false); ThawShield(); }
+    public void ActivateShield() => shield.SetActive(true);
+    public void ShieldHit() { if (shieldIsFrozen) { DepleteShield(); return; } DamageShield(); }
+    public void DamageShield() => shieldHealth--;
+    public void DepleteShield() => shieldHealth -= shieldHealth;
+    public void DamageHull() => hullHealth--;
+    public void FreezeShield() => shieldIsFrozen = true;
+    public void ThawShield() => shieldIsFrozen = false;
+    public void HullHit() { if (!shield.activeSelf && hullHealth > 0) { DamageHull(); } }
+    private void SetHullCollision() => hullCollider.enabled = !shield.activeSelf;
+    public void StartRebootingShield() => shieldIsRebooting = true;
+    public void FinishRebootingShield() => shieldIsRebooting = false;
+    public void StartFreezingShield(int length) => StartCoroutine(FreezeAndThawShield(length));
+    public void ShockShield(int length) => StartCoroutine(RebootShield(length));
+
     public IEnumerator FreezeAndThawShield(int length)
     {
         FreezeShield();
@@ -49,14 +56,12 @@ public class Spaceship : MonoBehaviour
 
     public void InheritedUpdateFunctionality()
     {
-        if (ShieldHealth <= 0)
+        if (shieldHealth <= 0)
         {
             DeactivateShield();
         }
         SetHullCollision();
     }
-
-
 
     public IEnumerator RebootShield(int length)
     {
@@ -68,18 +73,5 @@ public class Spaceship : MonoBehaviour
         ActivateShield();
         FinishRebootingShield();
     }
-
-    public void StartRebootingShield()
-    {
-        ShieldIsRebooting = true;
-    }
-
-    public void FinishRebootingShield()
-    {
-        ShieldIsRebooting = false;
-    }
-
-    public void StartFreezingShield(int length) { StartCoroutine(FreezeAndThawShield(length)); }
-
-    public void ShockShield(int length) { StartCoroutine(RebootShield(length)); }
+    #endregion
 }
