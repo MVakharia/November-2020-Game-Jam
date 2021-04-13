@@ -65,5 +65,12 @@ public class AsteroidManager : MonoBehaviour
             AsteroidsOnFirstRound + ( 9 * ExtraAsteroidsPerRound),
         };
     }
+
+    public void SetUpForLevelBeginning ()
+    {
+        ResetAsteroidsDestroyed();
+        SetNumberOfAsteroidsThisRound();
+        SetNumberOfAsteroidsLeftToSpawn();
+    }
     #endregion
 }

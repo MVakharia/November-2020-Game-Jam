@@ -62,6 +62,7 @@ public class PlayerSpaceship : Spaceship
     private int NewMaximumHullHealth => (hullLevel * 2) + 1;
     private int NewMaximumShieldHealth() => (shieldLevel * 2) + 1;
     private string HullHealthTextToDisplay() => "Hull health:\n\n" + HullHealth;
+    private bool ShieldHealthAbove0 => ShieldHealth > 0;
     private string ShieldHealthTextToDisplay
     {
         get
@@ -104,6 +105,8 @@ public class PlayerSpaceship : Spaceship
     private void CountDownLaserCooldown() => laserCooldownCount -= Time.deltaTime;
     private void ResetLaserCooldown() => laserCooldownCount = laserCooldown;
     private void SetNewLaserFireRate() => laserCooldown = NewLaserFireRate();
+    private void SetHullHealthText() => hullHealthText.text = HullHealthTextToDisplay();
+    private void SetShieldHealthText() => shieldHealthText.text = ShieldHealthTextToDisplay;
     public void UpgradeLaser()
     {
         laserLevel++;
@@ -125,8 +128,15 @@ public class PlayerSpaceship : Spaceship
         }
     }
 
-    private void SetHullHealthText () => hullHealthText.text = HullHealthTextToDisplay();
-    private void SetShieldHealthText() => shieldHealthText.text = ShieldHealthTextToDisplay;
+    public void ReEnableShieldForEOR()
+    {
+        if (ShieldHealthAbove0)
+        {
+            ThawShield();
+            FinishRebootingShield();
+            ActivateShield();
+        }
+    }
     #endregion
 
     private void Update()

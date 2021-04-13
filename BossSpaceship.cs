@@ -21,6 +21,10 @@ public class BossSpaceship : Spaceship
 
     #region Properties
     private bool IsAtTargetPosition() => transform.position == targetPosition.position;
+
+    public int RemainingEffectiveHealth => hullHealth + shieldHealth;
+
+    public int TotalEffectiveHealth => hullMaximumHealth + shieldMaximumHealth;
     #endregion
 
     #region Methods
@@ -54,6 +58,8 @@ public class BossSpaceship : Spaceship
             }
         }
     }
+
+
     #endregion
 
     private void Start()

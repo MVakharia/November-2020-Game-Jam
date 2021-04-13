@@ -2,7 +2,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary> The phases of the game. </summary>
 public enum GamePhase
 {
     StartScreen, Combat, Boss, Upgrade, Pause, Loss, End
@@ -73,149 +72,65 @@ public class GameManager : MonoBehaviour
     public GamePhase CurrentPhase  => currentPhase;
     public int CurrentLevel => currentLevel;
     public int Metal => metal;
+    public float LevelProgress => (AsteroidManager.Singleton.AsteroidsDestroyedThisRound / (float)AsteroidManager.Singleton.AsteroidsThisRound) * 100;
+    private bool PlayerIsTouchingScreen => Input.touchCount > 0;
+    private bool BeganTouchOnIndex0 => Input.GetTouch(0).phase == TouchPhase.Began;
+    private bool PlayerShieldHasHealth => PlayerSpaceship.Singleton.ShieldHealth > 0;
+    public string LevelProgressTextToDisplay => currentPhase == GamePhase.Combat ? LevelProgress.ToString("0") + "%" : (levelProgressText.text = "");
+    public float BossFightCompletionPercentage => bossShip ? (float)bossShip.RemainingEffectiveHealth / bossShip.TotalEffectiveHealth * 100F : 0;
+    public string LevelTextToDisplay => currentPhase == GamePhase.Boss ? "Boss" : "Level " + currentLevel;
+    private bool GameEnded => currentPhase == GamePhase.Loss || currentPhase == GamePhase.End;
+    private string StartAndEndTextToDisplay => currentPhase == GamePhase.End ? "You've beaten the final boss.\n\nThanks for playing.\n\nTap anywhere to restart." : "";
+    private bool HullHealthIsZero => PlayerSpaceship.Singleton.HullHealth <= 0;
+    private bool GameIsInBattlePhase => currentPhase == GamePhase.Combat || currentPhase == GamePhase.Boss;
+    public string PhaseTextToDisplay
+    {
+        get
+        {
+            switch (currentPhase)
+            {
+                case GamePhase.Combat: return "Survive the asteroid belt.";
+                case GamePhase.Boss: return BossFightCompletionPercentage.ToString("0") + "% health remaining.";
+                case GamePhase.Upgrade: return "";
+                case GamePhase.Loss: return "You lose. Tap anywhere to restart.";
+                default: return "";
+            }
+        }
+    }
     #endregion
 
-    private void Awake()
-    {
-        SetUpGame();
-    }
-
-    private void Update()
-    {
-        if(Input.touchCount > 0)
-        {
-            Touch touch = Input.GetTouch(0);
-
-            if(touch.phase == TouchPhase.Began)
-            {
-                if(currentPhase == GamePhase.StartScreen)
-                {
-                    BeginGame();
-                }
-
-                if(currentPhase == GamePhase.Loss || currentPhase == GamePhase.End)
-                {
-                    SceneManager.LoadScene(0);
-                }
-            }
-        }
-
-        if(currentPhase == GamePhase.Combat || currentPhase == GamePhase.Boss)
-        {
-            if(PlayerSpaceship.Singleton.HullHealth <= 0 && !playerHasLostGame)
-            {
-                playerHasLostGame = true;
-                LoseGame();
-            }
-        }
-
-        if(currentPhase == GamePhase.Combat)
-        {
-            if(AsteroidManager.Singleton.AllAsteroidsDestroyed)
-            {
-                EndCombatRound();
-            }
-        }
-
-        if(currentPhase == GamePhase.Boss)
-        {
-            if(bossShip && !bossShipFound)
-            {
-                bossShipFound = true;
-            }
-
-            if(bossShipFound && bossShip.HullHealth <= 0)
-            {
-                Destroy(bossShip.gameObject);
-
-                GameObject[] projectiles = GameObject.FindGameObjectsWithTag("Boss Projectile");
-
-                foreach(GameObject p in projectiles)
-                {
-                    Destroy(p);
-                }
-                EndBossRound();
-            }
-        }
-
-        levelProgressText.text = SetLevelProgressText();
-
-        currentPhaseText.text = SetCurrentPhaseText();
-
-        currentLevelText.text = SetCurrentLevelText();
-
-        if(currentPhase == GamePhase.Upgrade && !playerMovedToUpgradePhase )
-        {
-            playerMovedToUpgradePhase = true;
-        }
-
-        upgradeShopBackground.SetActive(currentPhase == GamePhase.Upgrade);
-
-        SetAmbientAudio();
-    }
-
-    private void SetCurrentPhase (GamePhase phase)
-    {
-        currentPhase = phase;
-        DisableEnableUI();
-    }
-
-    private void SetLevel(int level)
-    {
-        currentLevel = level;
-    }
-
-    private void SetUpGame ()
-    {
-        SetCurrentPhase(GamePhase.StartScreen);
-        SetLevel(0);
-        AsteroidManager.Singleton.SetAsteroidsPerLevel();
-    }
-
-    private void BeginGame ()
-    {
-        BeginALevel(1);
-    }
-
-    private void BeginALevel (int level)
-    {
-        SetLevel(level);
-
-        BeginLevel();
-    }
-
-    public void BeginNextLevel ()
-    {
-        IncrementLevel();
-
-        BeginLevel();
-    }
-
-    private void BeginLevel ()
+    #region Methods
+    private void SetLevel(int level) => currentLevel = level;
+    public void LocateBossShip() => bossShip = GameObject.FindGameObjectWithTag("Boss Spaceship").GetComponent<BossSpaceship>();
+    public void AddToCurrency(int amount) => metal += amount;
+    public void RemoveFromCurrency(int amount) => metal -= amount;
+    private void BeginGame() => BeginALevel(1);
+    private void UnLocateBossShip() => bossShipFound = false;
+    private void IncrementLevel() => currentLevel++;
+    private void SetLevelProgressText() => levelProgressText.text = LevelProgressTextToDisplay;
+    private void SetCurrentPhaseText () => currentPhaseText.text = PhaseTextToDisplay;
+    private void SetCurrentLevelText () => currentLevelText.text = LevelTextToDisplay;
+    private void MarkPlayerAsMovedToUpgradePhase () => playerMovedToUpgradePhase = true;
+    private void SetEndGameText() => startAndEndText.text = StartAndEndTextToDisplay;
+    private void MarkBossShipAsFound() => bossShipFound = true;
+    private void MarkPlayerGameLoss() => playerHasLostGame = true;
+    private void BeginLevel()
     {
         SetCurrentPhase(GamePhase.Combat);
-        if(PlayerSpaceship.Singleton.ShieldHealth > 0)
+
+        if (PlayerShieldHasHealth)
         {
-            ReEnableShieldForEOR();
+            PlayerSpaceship.Singleton.ReEnableShieldForEOR();
         }
 
-        AsteroidManager.Singleton.ResetAsteroidsDestroyed();
-
-        AsteroidManager.Singleton.SetNumberOfAsteroidsThisRound();
-
-        AsteroidManager.Singleton.SetNumberOfAsteroidsLeftToSpawn();
+        AsteroidManager.Singleton.SetUpForLevelBeginning();
 
         StartCoroutine(AsteroidSpawner.Singleton.SpawnAsteroids());
     }
 
-    private void IncrementLevel ()
+    public void EndCombatRound()
     {
-        currentLevel++;
-    }
-
-    public void EndCombatRound ()
-    {        
-        if(currentLevel % 2 != 0)
+        if (currentLevel % 2 != 0)
         {
             SetCurrentPhase(GamePhase.Upgrade);
         }
@@ -225,23 +140,8 @@ public class GameManager : MonoBehaviour
             SetCurrentPhase(GamePhase.Boss);
         }
     }
-
-    public void ReEnableShieldForEOR ()
-    {
-        if (PlayerSpaceship.Singleton.ShieldHealth > 0)
-        {
-            PlayerSpaceship.Singleton.ThawShield();
-            PlayerSpaceship.Singleton.FinishRebootingShield();
-            PlayerSpaceship.Singleton.ActivateShield();
-        }
-    }
-
-    public void UnLocateBossShip ()
-    {
-        bossShipFound = false;
-    }
-
-    public void EndBossRound ()
+    
+    public void EndBossRound()
     {
         if (currentLevel == 10)
         {
@@ -253,58 +153,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public float LevelProgress ()
-    {
-        return (AsteroidManager.Singleton.AsteroidsDestroyedThisRound / (float)AsteroidManager.Singleton.AsteroidsThisRound) * 100;
-    }
-
-    public string SetLevelProgressText()
-    {
-        if (currentPhase == GamePhase.Combat)
-        {
-            return LevelProgress().ToString("0") + "%";
-        }
-        return levelProgressText.text = "";
-    }
-
-    public string SetCurrentPhaseText ()
-    {
-        switch(currentPhase)
-        {
-            case GamePhase.Combat: return "Survive the asteroid belt.";
-            case GamePhase.Boss: return BossFightCompletionPercentage().ToString("0") + "% health remaining.";
-            case GamePhase.Upgrade: return "";
-            case GamePhase.Loss: return "You lose. Tap anywhere to restart.";
-            default: return "";
-        }
-    }
-
-    public float BossFightCompletionPercentage ()
-    {
-        if(bossShip)
-        {
-            int remainingUnits = bossShip.HullHealth + bossShip.ShieldHealth;
-
-            int totalUnits = bossShip.HullMaximumHealth + bossShip.ShieldMaximumHealth;
-
-            float percentage = (float)remainingUnits / totalUnits;
-
-            return percentage * 100F;
-        }
-        return 0;
-    }
-
-    public string SetCurrentLevelText ()
-    {
-        if (currentPhase == GamePhase.Boss)
-        {
-            return "Boss";
-        }
-
-        return "Level " + currentLevel;
-    }
-
-    public void DisableEnableUI ()
+    public void DisableEnableUI()
     {
         startUI.SetActive(false);
         combatUI.SetActive(false);
@@ -317,7 +166,7 @@ public class GameManager : MonoBehaviour
         lossUI.SetActive(currentPhase == GamePhase.Loss);
     }
 
-    public void LoseGame ()
+    public void LoseGame()
     {
         SetCurrentPhase(GamePhase.Loss);
 
@@ -333,30 +182,7 @@ public class GameManager : MonoBehaviour
         SetEndGameText();
     }
 
-    public void SetEndGameText ()
-    {
-        if(currentPhase == GamePhase.End)
-        {
-            startAndEndText.text = "You've beaten the final boss.\n\nThanks for playing.\n\nTap anywhere to restart.";
-        }
-    }
-
-    public void LocateBossShip ()
-    {
-        bossShip = GameObject.FindGameObjectWithTag("Boss Spaceship").GetComponent<BossSpaceship>();
-    }
-
-    public void AddToCurrency(int amount)
-    {
-        metal += amount;
-    }
-
-    public void RemoveFromCurrency (int amount)
-    {
-        metal -= amount;
-    }
-
-    public void SetAmbientAudio ()
+    public void SetAmbientAudio()
     {
         if (currentPhase == GamePhase.Combat)
         {
@@ -376,18 +202,113 @@ public class GameManager : MonoBehaviour
         }
         else if (currentPhase == GamePhase.Boss)
         {
-            if(!bossBackgroundAudioSource.isPlaying)
+            if (!bossBackgroundAudioSource.isPlaying)
             {
                 StopAllAmbientAudio();
                 bossBackgroundAudioSource.Play();
             }
         }
     }
-
-    public void StopAllAmbientAudio ()
+    public void StopAllAmbientAudio()
     {
         combatBackgroundAudioSource.Stop();
         upgradeBackgroundAudioSource.Stop();
         bossBackgroundAudioSource.Stop();
+    }
+    private void SetCurrentPhase(GamePhase phase)
+    {
+        currentPhase = phase;
+        DisableEnableUI();
+    }
+
+    private void SetUpGame()
+    {
+        SetCurrentPhase(GamePhase.StartScreen);
+        SetLevel(0);
+        AsteroidManager.Singleton.SetAsteroidsPerLevel();
+    }
+    private void BeginALevel(int level)
+    {
+        SetLevel(level);
+
+        BeginLevel();
+    }
+    public void BeginNextLevel()
+    {
+        IncrementLevel();
+
+        BeginLevel();
+    }
+    #endregion
+
+    private void Awake()
+    {
+        SetUpGame();
+    }
+
+    private void Update()
+    {
+        if (PlayerIsTouchingScreen && BeganTouchOnIndex0)
+        {
+            if (currentPhase == GamePhase.StartScreen)
+            {
+                BeginGame();
+            }
+
+            if (GameEnded)
+            {
+                SceneManager.LoadScene(0);
+            }
+        }
+
+        if(GameIsInBattlePhase)
+        {
+            if(HullHealthIsZero && !playerHasLostGame)
+            {
+                MarkPlayerGameLoss();
+                LoseGame();
+            }
+        }
+
+        if (currentPhase == GamePhase.Combat && AsteroidManager.Singleton.AllAsteroidsDestroyed)
+        {
+            EndCombatRound();
+        }
+
+        if(currentPhase == GamePhase.Boss)
+        {
+            if(bossShip && !bossShipFound)
+            {
+                MarkBossShipAsFound();
+            }
+
+            if(bossShipFound && bossShip.HullHealth <= 0)
+            {
+                Destroy(bossShip.gameObject);
+
+                GameObject[] projectiles = GameObject.FindGameObjectsWithTag("Boss Projectile");
+
+                foreach(GameObject p in projectiles)
+                {
+                    Destroy(p);
+                }
+                EndBossRound();
+            }
+        }
+
+        SetLevelProgressText();
+
+        SetCurrentPhaseText();
+
+        SetCurrentLevelText();
+
+        if(currentPhase == GamePhase.Upgrade && !playerMovedToUpgradePhase)
+        {
+            MarkPlayerAsMovedToUpgradePhase();
+        }
+
+        upgradeShopBackground.SetActive(currentPhase == GamePhase.Upgrade);
+
+        SetAmbientAudio();
     }
 }
