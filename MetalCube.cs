@@ -1,24 +1,44 @@
 ﻿using UnityEngine;
-using System.Collections.Generic;
 using System.Collections;
 
 public class MetalCube : MonoBehaviour
 {
+    #region Fields
     [SerializeField]
-    private Transform destination;
+    private Transform _destination;
     [SerializeField]
     private bool delayComplete;
     [SerializeField]
     private int cubeValue;
+    #endregion
 
-    public Transform Destination { get => destination; private set => destination = value; }
-    public bool DelayComplete { get => delayComplete; private set => delayComplete = value; }
-    public int CubeValue { get => cubeValue; private set => cubeValue = value; }
+    #region Properties
+    private bool AtDestination => transform.position == Destination.position;
 
-    private void Start()
+    private Transform Destination
     {
-        destination = GameObject.FindGameObjectWithTag("Player Spaceship").GetComponent<Transform>();
+        get
+        {
+            if(_destination == null)
+            {
+                _destination = GameObject.FindGameObjectWithTag("Player Spaceship").GetComponent<Transform>();
+            }
+            return _destination;
+        }
     }
+    #endregion
+
+    #region Methods
+    private void MarkDelayAsComplete () => delayComplete = true;
+    private IEnumerator Pause()
+    {
+        yield return new WaitForSeconds(2);
+
+        MarkDelayAsComplete();
+    }
+    private void Move() => transform.position = Vector3.MoveTowards(transform.position, Destination.position, 400F * Time.deltaTime);
+    private void AddToCurrency(int amount) => GameManager.Singleton.AddToCurrency(amount);
+    #endregion
 
     void Update()
     {
@@ -29,27 +49,10 @@ public class MetalCube : MonoBehaviour
             Move();
         }
 
-        if(transform.position == destination.position)
+        if(AtDestination)
         {
-            AddToCurrency(CubeValue);
+            AddToCurrency(cubeValue);
             Destroy(gameObject);
         }
-    }
-
-    private IEnumerator Pause ()
-    {
-        yield return new WaitForSeconds(2);
-
-        delayComplete = true;
-    }
-
-    private void Move()
-    {
-        transform.position = Vector3.MoveTowards(transform.position, destination.position, 400F * Time.deltaTime);
-    }
-
-    private void AddToCurrency (int amount)
-    {
-        GameManager.Singleton.AddToCurrency(amount);
     }
 }
